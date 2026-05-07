@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Script Studio — Nuclear Association</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1a18;
+    --paper: #f5f2eb;
+    --paper-dark: #ede9df;
+    --rule: #d4cfc3;
+    --accent: #c8401a;
+    --accent-pale: #f5ede9;
+    --muted: #7a7568;
+    --green: #2a6b4a;
+    --green-pale: #e8f2ed;
+    --warning-bg: #fffbf0;
+    --warning-border: #e6a817;
+  }
+
+  html { font-size: 16px; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Libre Baskerville', Georgia, serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── CONFIG BANNER ── */
+  #config-banner {
+    background: var(--warning-bg);
+    border-bottom: 2px solid var(--warning-border);
+    padding: 0.75rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  #config-banner.hidden { display: none; }
+
+  .banner-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--warning-border);
+    white-space: nowrap;
+  }
+
+  .banner-input-wrap {
+    display: flex;
+    gap: 0.4rem;
+    flex: 1;
+    min-width: 260px;
+  }
+
+  .banner-input-wrap input {
+    flex: 1;
+    background: white;
+    border: 1.5px solid var(--warning-border);
+    padding: 0.4rem 0.75rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink);
+    outline: none;
+  }
+
+  .banner-input-wrap input:focus { border-color: var(--ink); }
+
+  .banner-save-btn {
+    background: var(--warning-border);
+    color: white;
+    border: none;
+    padding: 0.4rem 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+
+  .banner-save-btn:hover { background: #c8910f; }
+
+  .banner-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .banner-dismiss {
+    background: none;
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    cursor: pointer;
+    text-decoration: underline;
+    white-space: nowrap;
+  }
+
+  /* ── HEADER ── */
+  header {
+    border-bottom: 2px solid var(--ink);
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+    position: sticky;
+    top: 0;
+    background: var(--paper);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .logo strong {
+    color: var(--ink);
+    display: block;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+  }
+
+  .header-rule { flex: 1; height: 1px; background: var(--rule); }
+
+  .step-indicator {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  .step-indicator span { color: var(--accent); font-weight: 500; }
+
+  /* ── MAIN LAYOUT ── */
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: calc(100vh - 62px);
+  }
+
+  /* ── LEFT PANEL ── */
+  .input-panel {
+    border-right: 2px solid var(--ink);
+    padding: 2.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    overflow-y: auto;
+  }
+
+  /* ── RIGHT PANEL ── */
+  .output-panel {
+    padding: 2.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow-y: auto;
+  }
+
+  /* ── SECTION LABELS ── */
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  /* ── FORMAT SELECTOR ── */
+  .format-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .format-btn {
+    background: var(--paper-dark);
+    border: 1.5px solid var(--rule);
+    padding: 0.75rem 0.875rem;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+    font-family: 'Libre Baskerville', serif;
+    color: var(--ink);
+  }
+
+  .format-btn:hover { border-color: var(--ink); background: var(--paper); }
+  .format-btn.active { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+  .format-btn .fmt-name { font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 0.2rem; }
+  .format-btn .fmt-desc {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    opacity: 0.6;
+    display: block;
+    line-height: 1.4;
+  }
+  .format-btn.active .fmt-desc { opacity: 0.7; }
+
+  /* ── INPUTS ── */
+  .input-group { display: flex; flex-direction: column; }
+
+  textarea, input[type="text"] {
+    background: var(--paper-dark);
+    border: 1.5px solid var(--rule);
+    padding: 0.875rem 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink);
+    resize: vertical;
+    line-height: 1.7;
+    width: 100%;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+
+  textarea:focus, input[type="text"]:focus { border-color: var(--ink); background: var(--paper); }
+  textarea::placeholder, input::placeholder { color: var(--muted); font-style: italic; }
+  textarea { min-height: 160px; }
+
+  /* ── LINKS ── */
+  .links-area { display: flex; flex-direction: column; gap: 0.4rem; }
+
+  .link-row { display: flex; gap: 0.4rem; align-items: center; }
+  .link-row input { flex: 1; }
+
+  .btn-icon {
+    background: none;
+    border: 1.5px solid var(--rule);
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--muted);
+    flex-shrink: 0;
+    transition: all 0.15s;
+    line-height: 1;
+  }
+
+  .btn-icon:hover { border-color: var(--ink); color: var(--ink); }
+
+  .add-link-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    padding: 0.25rem 0;
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+    transition: color 0.15s;
+  }
+
+  .add-link-btn:hover { color: var(--ink); }
+
+  /* ── GENERATE BTN ── */
+  .generate-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 1rem 1.5rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    transition: background 0.15s;
+    width: 100%;
+    margin-top: auto;
+  }
+
+  .generate-btn:hover:not(:disabled) { background: #a33214; }
+  .generate-btn:disabled { background: var(--muted); cursor: not-allowed; }
+  .generate-btn .btn-arrow { font-size: 1rem; transition: transform 0.15s; }
+  .generate-btn:hover:not(:disabled) .btn-arrow { transform: translateX(3px); }
+
+  /* ── OUTPUT ── */
+  .output-header { display: flex; align-items: center; justify-content: space-between; }
+
+  .output-actions { display: flex; gap: 0.5rem; }
+
+  .action-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.4rem 0.75rem;
+    border: 1.5px solid var(--rule);
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .action-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+  .action-btn.success {
+    border-color: var(--green);
+    color: var(--green);
+    background: var(--green-pale);
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    text-align: center;
+    padding: 3rem;
+    border: 1.5px dashed var(--rule);
+  }
+
+  .empty-icon { font-size: 2rem; opacity: 0.3; }
+  .empty-title { font-size: 0.9rem; font-weight: 700; color: var(--muted); }
+  .empty-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    line-height: 1.8;
+    max-width: 260px;
+  }
+
+  /* ── LOADING ── */
+  .loading-state {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 3rem;
+    border: 1.5px dashed var(--rule);
+  }
+
+  .loading-state.visible { display: flex; }
+
+  .loading-bar-wrap { width: 200px; height: 2px; background: var(--rule); overflow: hidden; }
+
+  .loading-bar {
+    height: 100%;
+    background: var(--accent);
+    width: 30%;
+    animation: scan 1.6s ease-in-out infinite;
+  }
+
+  @keyframes scan {
+    0% { transform: translateX(-100%); width: 30%; }
+    50% { width: 60%; }
+    100% { transform: translateX(400%); width: 30%; }
+  }
+
+  .loading-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ── SCRIPT OUTPUT ── */
+  .script-output { display: none; flex-direction: column; gap: 0; flex: 1; }
+  .script-output.visible { display: flex; }
+
+  .script-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .script-format-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0.25rem 0.6rem;
+  }
+
+  .script-timestamp { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); }
+
+  #script-editable {
+    flex: 1;
+    background: var(--paper-dark);
+    border: 1.5px solid var(--rule);
+    padding: 1.5rem;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 0.85rem;
+    line-height: 1.85;
+    color: var(--ink);
+    white-space: pre-wrap;
+    min-height: 400px;
+    outline: none;
+    cursor: text;
+    transition: border-color 0.15s;
+  }
+
+  #script-editable:focus { border-color: var(--ink); background: white; }
+
+  /* ── FORMAT DETAIL ── */
+  .format-detail {
+    background: var(--accent-pale);
+    border-left: 3px solid var(--accent);
+    padding: 0.75rem 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    line-height: 1.8;
+    color: var(--ink);
+    display: none;
+  }
+
+  .format-detail.visible { display: block; }
+
+  .format-detail strong {
+    display: block;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+    font-size: 0.6rem;
+  }
+
+  /* ── REFINE BAR ── */
+  .refine-bar { display: none; gap: 0.5rem; margin-top: 0.75rem; }
+  .refine-bar.visible { display: flex; }
+  .refine-bar input { flex: 1; min-height: unset; height: 38px; resize: none; }
+
+  .refine-btn {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 0 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+
+  .refine-btn:hover { background: var(--accent); }
+  .refine-btn:disabled { background: var(--muted); cursor: not-allowed; }
+
+  /* ── ERROR TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    padding: 0.75rem 1.25rem;
+    letter-spacing: 0.05em;
+    z-index: 999;
+    transition: transform 0.3s ease;
+    max-width: 90vw;
+    text-align: center;
+  }
+
+  .toast.visible { transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--accent); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 2px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 800px) {
+    main { grid-template-columns: 1fr; }
+    .input-panel { border-right: none; border-bottom: 2px solid var(--ink); }
+    #config-banner { padding: 0.75rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ CONFIG BANNER ══ -->
+<div id="config-banner">
+  <span class="banner-label">⚙ API Endpoint</span>
+  <div class="banner-input-wrap">
+    <input
+      type="text"
+      id="worker-url-input"
+      placeholder="https://script-studio-api.your-name.workers.dev"
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <button class="banner-save-btn" onclick="saveWorkerUrl()">Save</button>
+  </div>
+  <span class="banner-note">Paste your Cloudflare Worker URL. Saved locally — not shared. <a href="#setup-guide" onclick="toggleSetup(event)" style="color:inherit">Setup guide ↓</a></span>
+  <button class="banner-dismiss" onclick="dismissBanner()">Dismiss</button>
+</div>
+
+<!-- ══ SETUP GUIDE ══ -->
+<div id="setup-guide" style="display:none; background:#f0ede4; border-bottom:1px solid var(--rule); padding:1.25rem 2rem;">
+  <div style="font-family:'DM Mono',monospace;font-size:0.65rem;line-height:2;color:var(--muted);max-width:680px;">
+    <strong style="color:var(--ink);display:block;margin-bottom:0.5rem;letter-spacing:0.1em;text-transform:uppercase;font-size:0.6rem;">One-time setup — takes about 5 minutes</strong>
+    <b style="color:var(--ink);">1.</b> Go to <a href="https://dash.cloudflare.com/workers" target="_blank" style="color:var(--accent);">dash.cloudflare.com/workers</a> → Create Worker → paste the code from <code>worker/index.js</code> in this repo → Deploy.<br>
+    <b style="color:var(--ink);">2.</b> In your Worker settings → Variables → add a secret named <code>ANTHROPIC_API_KEY</code> with your key from <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent);">console.anthropic.com</a>.<br>
+    <b style="color:var(--ink);">3.</b> Copy your Worker URL (e.g. <code>https://script-studio-api.yourname.workers.dev</code>) and paste it into the field above.<br>
+    <b style="color:var(--ink);">4.</b> Click Save. You're done. Your API key never touches this page.
+  </div>
+</div>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo">
+    <span>Nuclear Association</span>
+    <strong>Script Studio</strong>
+  </div>
+  <div class="header-rule"></div>
+  <div class="step-indicator">Step <span id="step-num">1</span> of 3</div>
+</header>
+
+<main>
+
+  <!-- ══ LEFT: INPUT PANEL ══ -->
+  <div class="input-panel">
+
+    <!-- FORMAT -->
+    <div class="input-group">
+      <div class="section-label">01 — Format</div>
+      <div class="format-grid" id="format-grid">
+        <button class="format-btn" data-format="narrative" onclick="selectFormat(this)">
+          <span class="fmt-name">Narrative Documentary</span>
+          <span class="fmt-desc">Events, accidents, milestones</span>
+        </button>
+        <button class="format-btn" data-format="explainer" onclick="selectFormat(this)">
+          <span class="fmt-name">Explainer</span>
+          <span class="fmt-desc">Concepts, processes, tech</span>
+        </button>
+        <button class="format-btn" data-format="interview" onclick="selectFormat(this)">
+          <span class="fmt-name">Interview</span>
+          <span class="fmt-desc">Expert guests, Q&A framing</span>
+        </button>
+        <button class="format-btn" data-format="news" onclick="selectFormat(this)">
+          <span class="fmt-name">News Response</span>
+          <span class="fmt-desc">Breaking, policy, issues</span>
+        </button>
+        <button class="format-btn" data-format="highlights" onclick="selectFormat(this)">
+          <span class="fmt-name">Event Highlights</span>
+          <span class="fmt-desc">Conferences, summits</span>
+        </button>
+        <button class="format-btn" data-format="preview" onclick="selectFormat(this)">
+          <span class="fmt-name">What to Expect</span>
+          <span class="fmt-desc">Previews, upcoming events</span>
+        </button>
+        <button class="format-btn" data-format="101" onclick="selectFormat(this)" style="grid-column:span 2;">
+          <span class="fmt-name">Topic 101</span>
+          <span class="fmt-desc">Foundational subjects — widest public audience, highest trust stakes</span>
+        </button>
+      </div>
+      <div class="format-detail" id="format-detail"></div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="input-group">
+      <div class="section-label">02 — Content</div>
+      <textarea id="content-input" placeholder="Paste your copy, outline, bullet points, or keywords here. The more context you provide, the stronger the script."></textarea>
+    </div>
+
+    <!-- LINKS -->
+    <div class="input-group">
+      <div class="section-label">03 — Reference Links <span style="font-style:italic;letter-spacing:0;text-transform:none;font-family:'Libre Baskerville',serif;font-weight:400;opacity:0.6">(optional)</span></div>
+      <div class="links-area" id="links-area">
+        <div class="link-row">
+          <input type="text" placeholder="https://..." />
+          <button class="btn-icon" onclick="removeLink(this)" title="Remove">×</button>
+        </div>
+      </div>
+      <button class="add-link-btn" onclick="addLink()">+ Add another link</button>
+    </div>
+
+    <!-- GENERATE -->
+    <button class="generate-btn" id="generate-btn" onclick="generateScript()" disabled>
+      <span>Generate Script</span>
+      <span class="btn-arrow">→</span>
+    </button>
+
+  </div>
+
+  <!-- ══ RIGHT: OUTPUT PANEL ══ -->
+  <div class="output-panel">
+
+    <div class="output-header">
+      <div class="section-label" style="margin-bottom:0;flex:1">Output</div>
+      <div class="output-actions" id="output-actions" style="display:none">
+        <button class="action-btn" onclick="copyScript(this)">Copy</button>
+        <button class="action-btn" onclick="clearOutput()">Clear</button>
+      </div>
+    </div>
+
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">✦</div>
+      <div class="empty-title">No script yet</div>
+      <div class="empty-sub">Select a format, add your content, and click Generate Script to begin.</div>
+    </div>
+
+    <div class="loading-state" id="loading-state">
+      <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
+      <div class="loading-label" id="loading-label">Drafting script…</div>
+    </div>
+
+    <div class="script-output" id="script-output">
+      <div class="script-meta">
+        <div class="script-format-tag" id="script-format-tag">—</div>
+        <div class="script-timestamp" id="script-timestamp">—</div>
+      </div>
+      <div
+        id="script-editable"
+        contenteditable="true"
+        spellcheck="true"
+      ></div>
+      <div class="refine-bar" id="refine-bar">
+        <input type="text" id="refine-input" placeholder="Refine: e.g. 'sharpen the hook' or 'add more technical depth to section 2'" />
+        <button class="refine-btn" id="refine-btn" onclick="refineScript()">Refine →</button>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ──
+const STORAGE_KEY = 'script_studio_worker_url';
+let workerUrl = localStorage.getItem(STORAGE_KEY) || '';
+let selectedFormat = null;
+let scriptHistory = [];
+
+// Load saved URL on boot
+window.addEventListener('DOMContentLoaded', () => {
+  if (workerUrl) {
+    document.getElementById('worker-url-input').value = workerUrl;
+    document.getElementById('config-banner').classList.add('hidden');
+  }
+  validateForm();
+});
+
+function saveWorkerUrl() {
+  const val = document.getElementById('worker-url-input').value.trim().replace(/\/$/, '');
+  if (!val.startsWith('http')) {
+    toast('Please enter a valid URL starting with https://', true);
+    return;
+  }
+  workerUrl = val;
+  localStorage.setItem(STORAGE_KEY, workerUrl);
+  document.getElementById('config-banner').classList.add('hidden');
+  toast('API endpoint saved ✓');
+  validateForm();
+}
+
+function dismissBanner() {
+  if (!workerUrl) {
+    toast('Enter and save your Worker URL first to use the tool.', true);
+    return;
+  }
+  document.getElementById('config-banner').classList.add('hidden');
+}
+
+function toggleSetup(e) {
+  e.preventDefault();
+  const g = document.getElementById('setup-guide');
+  g.style.display = g.style.display === 'none' ? 'block' : 'none';
+}
+
+// ── FORMAT META ──
+const FORMAT_META = {
+  narrative: { name: 'Narrative Documentary', detail: 'Beats: Hook → Context → What Happened → Human Consequence → What Changed → Thematic Close + Platform Prompt', length: '10–18 min · 120–140 wpm' },
+  explainer: { name: 'Explainer', detail: 'Beats: Hook → Baseline → The Explanation → Why It Matters → Close + Platform Prompt', length: '6–12 min · 130–150 wpm' },
+  interview: { name: 'Interview', detail: 'Beats: Introduction Script → Question Framework → Bridge Lines → Thematic Close + Platform Prompt', length: '12–25 min · 120–130 wpm' },
+  news:      { name: 'News Response', detail: 'Beats: What\'s Happening → Why It Matters → What You Need To Know → What Remains Unknown → Close', length: '4–8 min · 150–170 wpm' },
+  highlights:{ name: 'Event Highlights', detail: 'Beats: Opening Significance → Key Moments (2–3) → The Wider Picture → Close + Platform Prompt', length: '5–10 min · 130–150 wpm' },
+  preview:   { name: 'What to Expect', detail: 'Beats: What Is This? → Why It Matters → What To Watch For → What\'s Uncertain → Close + Platform Prompt', length: '4–8 min · 130–150 wpm' },
+  '101':     { name: 'Topic 101', detail: 'Beats: Hook (state the question) → Start From Zero → Build Logically → Address the Obvious Concern → What This Means → Close + Platform Prompt', length: '8–14 min · 120–140 wpm' }
+};
+
+const FORMAT_PROMPTS = {
+  narrative: `FORMAT: Narrative Documentary
+Structure: HOOK → CONTEXT → WHAT HAPPENED → HUMAN CONSEQUENCE → WHAT CHANGED → THEMATIC CLOSE → PLATFORM PROMPT
+- Hook: surface the most consequential moment early. Weight and consequence, not shock. Answer: what is this, why does it matter, what will I leave knowing.
+- Context: establish the normal before the event. Give a baseline.
+- What Happened: causal, precise, step by step. Explain before naming.
+- Human Consequence: physical, psychological, social — equal weight. Numbers anchored. Acknowledge why people worry.
+- What Changed: specific. Named organisations, named mechanisms, named outcomes.
+- Thematic Close: reflective, earned. Reframes what came before without summarising.
+- Platform Prompt: one natural sentence directing to next content.`,
+
+  explainer: `FORMAT: Explainer
+Structure: HOOK → BASELINE → THE EXPLANATION → WHY IT MATTERS → CLOSE → PLATFORM PROMPT
+- Hook: frame the question the video answers. Make the viewer feel the knowledge gap without embarrassing them.
+- Baseline: what the viewer probably already knows. Build from it.
+- The Explanation: one concept developed logically. Each step earns the next. Analogies are bridges not destinations.
+- Why It Matters: connect to something real — energy policy, daily life, a current news story.
+- Close: resolve the opening question explicitly.
+- Platform Prompt: one natural sentence.`,
+
+  interview: `FORMAT: Interview Frame Script
+Structure: INTRODUCTION SCRIPT → QUESTION FRAMEWORK → BRIDGE LINES → THEMATIC CLOSE → PLATFORM PROMPT
+- Introduction: who is this person, why does their expertise matter, what specific question are they here to answer. Factual not promotional.
+- Questions: write 6–8 questions in order of increasing depth.
+- Bridge Lines: short scripted transitions between topic areas.
+- Thematic Close: host draws one clear thread from the anticipated conversation.
+- Platform Prompt: one natural sentence.`,
+
+  news: `FORMAT: News / Issue Response
+Structure: WHAT'S HAPPENING → WHY IT MATTERS → WHAT YOU NEED TO KNOW → WHAT REMAINS UNKNOWN → CLOSE → PLATFORM PROMPT
+- What's Happening: state the news clearly within the first 20 seconds. No wind-up.
+- Why It Matters: for this industry, technology, policy landscape.
+- What You Need To Know: factual and technical context for a non-specialist. No spin.
+- What Remains Unknown: if situation is developing, say so explicitly. No speculation.
+- Close: brief. Where to follow developments.`,
+
+  highlights: `FORMAT: Event Highlights
+Structure: OPENING SIGNIFICANCE → KEY MOMENT 1 → KEY MOMENT 2 → [KEY MOMENT 3] → THE WIDER PICTURE → CLOSE → PLATFORM PROMPT
+- Opening Significance: why did this event matter. What was at stake going in.
+- Key Moments: 2–3 only. Each a mini-narrative: what was said/decided, why significant, what it signals.
+- The Wider Picture: what does this event signal about the industry or policy landscape.`,
+
+  preview: `FORMAT: What to Expect
+Structure: WHAT IS THIS → WHY IT MATTERS → WHAT TO WATCH FOR → WHAT'S UNCERTAIN → CLOSE → PLATFORM PROMPT
+- What Is This: clear plain description of the event/process/milestone being previewed.
+- Why It Matters: for the industry, energy policy, the viewer specifically.
+- What To Watch For: 2–3 specific, concrete, verifiable things.
+- What's Uncertain: frame uncertainty as the reason to pay attention.
+- Close: signal a follow-up video will cover what actually happened.`,
+
+  '101': `FORMAT: Topic 101
+Structure: HOOK → START FROM ZERO → BUILD THE CONCEPT → ADDRESS THE CONCERN → WHAT THIS MEANS → CLOSE → PLATFORM PROMPT
+- Hook: begin with the question the viewer already has, stated plainly. Validate it.
+- Start From Zero: assume no prior knowledge. Do not assume low intelligence.
+- Build The Concept: each concept earns the next. Explain then name.
+- Address The Concern: the viewer has a concern about nuclear energy. Name it. Address it with evidence.
+- What This Means: connect to something current and real.
+- Close: confirm the viewer now knows what they came to know.`
+};
+
+const SYSTEM_PROMPT = `You are a senior scriptwriter for a nuclear association producing YouTube-first video content for a dual audience: the general public and technical experts/policymakers.
+
+VOICE RULES (never break these):
+- Authoritative without being defensive. Explain, don't advocate.
+- Measured without being cold. Acknowledge human consequences genuinely.
+- Transparent without being naive. Address failures directly.
+- Accessible without being simplistic.
+- Never promotional, never alarmist, never evasive, never condescending.
+
+WRITING RULES:
+- Write for the ear. Every sentence should work read aloud.
+- One idea per sentence as the default.
+- Fragments permitted as section openers or emphasis beats only.
+- Explain concepts before naming them technically.
+- Every statistic must have a frame of reference.
+- Where evidence is uncertain, say so explicitly.
+- Never use passive voice to obscure accountability.
+- Address public concern about nuclear energy — acknowledge it, contextualise it, meet it with evidence.
+
+YOUTUBE-FIRST RULES:
+- The hook must surface the most compelling material early. No wind-up.
+- Plant retention devices (open loops, forward-pull transitions, progress signals) throughout.
+- Every section transition must pull forward, not pivot neutrally.
+- Every script ends with a thematic close followed by a natural platform prompt.
+
+FORMAT THE SCRIPT:
+- Use ALL CAPS labels for each beat/section (e.g. HOOK, CONTEXT, WHAT HAPPENED)
+- Leave a blank line between each section
+- Write prose as a script — no markdown headers or bullets in the body
+- Speaker direction notes go in [square brackets]
+- Output should be ready to read aloud as a first draft`;
+
+// ── FORMAT SELECTION ──
+function selectFormat(btn) {
+  document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedFormat = btn.dataset.format;
+  const meta = FORMAT_META[selectedFormat];
+  const detail = document.getElementById('format-detail');
+  detail.innerHTML = `<strong>${meta.name} · ${meta.length}</strong>${meta.detail}`;
+  detail.classList.add('visible');
+  updateStep();
+  validateForm();
+}
+
+// ── LINKS ──
+function addLink() {
+  const area = document.getElementById('links-area');
+  const row = document.createElement('div');
+  row.className = 'link-row';
+  row.innerHTML = `<input type="text" placeholder="https://..." /><button class="btn-icon" onclick="removeLink(this)" title="Remove">×</button>`;
+  area.appendChild(row);
+}
+
+function removeLink(btn) {
+  const rows = document.querySelectorAll('.link-row');
+  if (rows.length > 1) btn.closest('.link-row').remove();
+  else btn.closest('.link-row').querySelector('input').value = '';
+}
+
+function getLinks() {
+  return Array.from(document.querySelectorAll('.link-row input'))
+    .map(i => i.value.trim()).filter(Boolean);
+}
+
+// ── VALIDATION ──
+function validateForm() {
+  const ready = !!selectedFormat
+    && document.getElementById('content-input').value.trim().length > 20
+    && !!workerUrl;
+  document.getElementById('generate-btn').disabled = !ready;
+}
+
+document.getElementById('content-input').addEventListener('input', () => { updateStep(); validateForm(); });
+
+function updateStep() {
+  const hasFormat = !!selectedFormat;
+  const hasContent = document.getElementById('content-input').value.trim().length > 20;
+  document.getElementById('step-num').textContent = hasFormat && hasContent ? '3' : hasFormat ? '2' : '1';
+}
+
+// ── UI HELPERS ──
+function showEmpty() {
+  document.getElementById('empty-state').style.display = '';
+  document.getElementById('loading-state').classList.remove('visible');
+  document.getElementById('script-output').classList.remove('visible');
+  document.getElementById('output-actions').style.display = 'none';
+}
+
+function showLoading(msg) {
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('loading-state').classList.add('visible');
+  document.getElementById('script-output').classList.remove('visible');
+  document.getElementById('output-actions').style.display = 'none';
+  document.getElementById('loading-label').textContent = msg || 'Drafting script…';
+}
+
+function showOutput(formatName) {
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('loading-state').classList.remove('visible');
+  document.getElementById('script-output').classList.add('visible');
+  document.getElementById('output-actions').style.display = '';
+  document.getElementById('script-format-tag').textContent = formatName;
+  document.getElementById('script-timestamp').textContent =
+    new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function toast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (isError ? ' error' : '');
+  el.classList.add('visible');
+  setTimeout(() => el.classList.remove('visible'), 3000);
+}
+
+// ── API CALL ──
+async function callWorker(messages) {
+  if (!workerUrl) throw new Error('No Worker URL configured. Enter it in the banner above.');
+  const res = await fetch(`${workerUrl}/api/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system: SYSTEM_PROMPT, messages, max_tokens: 4000 })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+  return data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+}
+
+// ── GENERATE ──
+async function generateScript() {
+  if (!selectedFormat) return;
+  const content = document.getElementById('content-input').value.trim();
+  if (!content) return;
+  if (!workerUrl) {
+    document.getElementById('config-banner').classList.remove('hidden');
+    toast('Set up your API endpoint first.', true);
+    return;
+  }
+
+  const links = getLinks();
+  const userMessage = `Please write a script in the following format.\n\n${FORMAT_PROMPTS[selectedFormat]}\n\nSOURCE MATERIAL:\n${content}\n\n${links.length ? `REFERENCE LINKS:\n${links.join('\n')}` : ''}\n\nWrite the complete script now. Use the beat labels in ALL CAPS. Write prose, not bullets. Make it ready to read aloud as a first draft.`;
+
+  scriptHistory = [{ role: 'user', content: userMessage }];
+
+  showLoading('Structuring the script…');
+  document.getElementById('generate-btn').disabled = true;
+
+  const msgs = ['Structuring the script…','Calibrating voice and tone…','Writing the hook…','Drafting the close…'];
+  let mi = 0;
+  const ticker = setInterval(() => {
+    mi = (mi + 1) % msgs.length;
+    const el = document.getElementById('loading-label');
+    if (el) el.textContent = msgs[mi];
+  }, 2400);
+
+  try {
+    const scriptText = await callWorker(scriptHistory);
+    scriptHistory.push({ role: 'assistant', content: scriptText });
+    clearInterval(ticker);
+    showOutput(FORMAT_META[selectedFormat].name);
+    renderScript(scriptText);
+    document.getElementById('refine-bar').classList.add('visible');
+  } catch (err) {
+    clearInterval(ticker);
+    showEmpty();
+    toast(err.message, true);
+  } finally {
+    document.getElementById('generate-btn').disabled = false;
+    validateForm();
+  }
+}
+
+// ── RENDER ──
+function renderScript(text) {
+  const el = document.getElementById('script-editable');
+  const lines = text.split('\n');
+  let html = '';
+  lines.forEach(line => {
+    const t = line.trim();
+    if (!t) { html += '\n'; return; }
+    const isBeat = /^[A-Z][A-Z\s\d'—→:–\/]+$/.test(t) && t.length < 80;
+    if (isBeat) {
+      html += `<div style="font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.2em;color:#c8401a;margin:1.25rem 0 0.25rem;padding-bottom:0.25rem;border-bottom:1px solid #d4cfc3;">${escHtml(t)}</div>`;
+    } else {
+      html += `<div style="margin-bottom:0.25rem;">${escHtml(t)}</div>`;
+    }
+  });
+  el.innerHTML = html;
+  el.scrollTop = 0;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── REFINE ──
+async function refineScript() {
+  const refinement = document.getElementById('refine-input').value.trim();
+  if (!refinement || scriptHistory.length < 2) return;
+
+  document.getElementById('refine-btn').disabled = true;
+  document.getElementById('refine-input').disabled = true;
+
+  const el = document.getElementById('script-editable');
+  el.style.opacity = '0.4';
+
+  scriptHistory.push({ role: 'user', content: `Please refine the script as follows: ${refinement}\n\nReturn the complete revised script using the same ALL CAPS beat label formatting.` });
+
+  try {
+    const revised = await callWorker(scriptHistory);
+    scriptHistory.push({ role: 'assistant', content: revised });
+    el.style.opacity = '1';
+    renderScript(revised);
+    document.getElementById('refine-input').value = '';
+    document.getElementById('script-timestamp').textContent =
+      new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' · revised';
+    toast('Script refined ✓');
+  } catch (err) {
+    el.style.opacity = '1';
+    toast(err.message, true);
+    scriptHistory.pop();
+  } finally {
+    document.getElementById('refine-btn').disabled = false;
+    document.getElementById('refine-input').disabled = false;
+    document.getElementById('refine-input').focus();
+  }
+}
+
+document.getElementById('refine-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); refineScript(); }
+});
+
+// ── COPY ──
+async function copyScript(btn) {
+  const text = document.getElementById('script-editable').innerText;
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('success');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('success'); }, 2000);
+  } catch { toast('Copy failed — try selecting and copying manually.', true); }
+}
+
+// ── CLEAR ──
+function clearOutput() {
+  scriptHistory = [];
+  document.getElementById('script-editable').innerHTML = '';
+  document.getElementById('refine-bar').classList.remove('visible');
+  showEmpty();
+  updateStep();
+}
+</script>
+</body>
+</html>
